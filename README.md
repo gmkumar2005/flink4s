@@ -32,7 +32,7 @@ val items = (1 to 1000).map(x => s"item-${x % 10}")
 val stream = StreamExecutionEnvironment.fromCollection(items)
   .map(x => Counter(x, 1))
   .keyBy(_.id)
-  .reduce((acc, v) => acc.copy(counter = acc.count + v.count))
+  .reduce((acc, v) => acc.copy(count = acc.count + v.count))
 ```
 
 Or if you want to get fancy:

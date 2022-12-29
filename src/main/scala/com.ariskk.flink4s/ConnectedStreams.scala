@@ -16,8 +16,8 @@ final case class ConnectedStreams[A, B](streams: JavaCStreams[A, B]) {
       f1: (A, S) => (O, S),
       f2: (B, S) => (O, S),
       emptyState: S
-  )(implicit stateTypeInfo: TypeInformation[S], outTypeInfo: TypeInformation[O]): DataStream[O] = {
-    val biMapper = new RichCoMapFunction[A, B, O] with ResultTypeQueryable[O] {
+  )(using stateTypeInfo: TypeInformation[S], outTypeInfo: TypeInformation[O]): DataStream[O] = {
+    val biMapper: RichCoMapFunction[A, B, O] with ResultTypeQueryable[O] = new RichCoMapFunction[A, B, O] with ResultTypeQueryable[O] {
       lazy val serializer: TypeSerializer[S] =
         stateTypeInfo.createSerializer(getRuntimeContext.getExecutionConfig)
       lazy val stateDescriptor = new ValueStateDescriptor[S]("name", serializer)

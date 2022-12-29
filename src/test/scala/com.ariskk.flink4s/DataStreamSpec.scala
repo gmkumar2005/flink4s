@@ -1,14 +1,13 @@
 package com.ariskk.flink4s
 
-import scala.collection.mutable.{Buffer => MutableBuffer}
+import scala.collection.mutable.Buffer as MutableBuffer
 import scala.concurrent.Future
-import concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
-
 import com.ariskk.flink4s.TypeInfo.{intTypeInfo, stringTypeInfo}
+import org.apache.flink.streaming.api.functions.sink.SinkFunction.Context
 
 final class DataStreamSpec extends AnyFunSpec with Matchers {
 
@@ -55,7 +54,7 @@ final class DataStreamSpec extends AnyFunSpec with Matchers {
       val stream2 = env.fromCollection((11 to 20).toList)
       val stream3 = env.fromCollection((21 to 30).toList)
       val results = stream1.union(stream2, stream3).runAndCollect
-      results should contain theSameElementsAs ((1 to 30).toList)
+      results should contain theSameElementsAs (1 to 30).toList
     }
 
     it("should be able to accept sinks") {
@@ -86,7 +85,7 @@ final class DataStreamSpec extends AnyFunSpec with Matchers {
         .fromCollection(elements)
         .unorderedMapAsync(x => Future(x + 1))
         .runAndCollect
-      results should contain theSameElementsAs ((2 to 21).toList)
+      results should contain theSameElementsAs (2 to 21).toList
 
     }
   }
@@ -95,8 +94,8 @@ final class DataStreamSpec extends AnyFunSpec with Matchers {
 
 object DataStreamSpec {
   val values: MutableBuffer[Int] = MutableBuffer()
-  def intCollector = new SinkFunction[Int] {
-    override def invoke(value: Int): Unit =
+  def intCollector: SinkFunction[Int] = new SinkFunction[Int] {
+    override def invoke(value: Int, context: Context): Unit =
       synchronized(values.addOne(value))
   }
 

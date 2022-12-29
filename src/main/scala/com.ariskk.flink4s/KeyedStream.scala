@@ -15,7 +15,7 @@ import org.apache.flink.streaming.api.windowing.windows.GlobalWindow
 import cats.Semigroup
 import cats.Monoid
 
-final case class KeyedStream[T, K](stream: JavaKeyedStream[T, K])(implicit
+final case class KeyedStream[T, K](stream: JavaKeyedStream[T, K])(using
     typeInfo: TypeInformation[T],
     keyInfo: TypeInformation[K]
 ) {
@@ -27,9 +27,9 @@ final case class KeyedStream[T, K](stream: JavaKeyedStream[T, K])(implicit
     DataStream(stream.reduce(reducer))
   }
 
-  def combine(implicit semi: Semigroup[T]): DataStream[T] = reduce(semi.combine)
+  def combine(using semi: Semigroup[T]): DataStream[T] = reduce(semi.combine)
 
-  def connect[T2, K2](otherKeyedStream: KeyedStream[T2, K2])(implicit
+  def connect[T2, K2](otherKeyedStream: KeyedStream[T2, K2])(using
       tTypeInfo: TypeInformation[T2],
       kTypeInfo: TypeInformation[K2]
   ): ConnectedStreams[T, T2] =

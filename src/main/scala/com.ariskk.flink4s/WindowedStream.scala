@@ -5,7 +5,7 @@ import org.apache.flink.streaming.api.windowing.windows.Window
 import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.api.common.typeinfo.TypeInformation
 
-final case class WindowedStream[T, K, W <: Window](stream: JavaWStream[T, K, W])(implicit
+final case class WindowedStream[T, K, W <: Window](stream: JavaWStream[T, K, W])(using
     typeInfo: TypeInformation[T]
 ) {
 

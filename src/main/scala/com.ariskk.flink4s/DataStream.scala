@@ -28,9 +28,9 @@ import org.apache.flink.streaming.api.functions.async.RichAsyncFunction
 import org.apache.flink.streaming.api.functions.async.ResultFuture
 import org.apache.flink.streaming.api.datastream.AsyncDataStream
 
-final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInformation[T]) {
+final case class DataStream[T](stream: JavaStream[T])(using typeInfo: TypeInformation[T]) {
 
-  def map[R](f: T => R)(implicit typeInfo: TypeInformation[R]): DataStream[R] = {
+  def map[R](f: T => R)(using typeInfo: TypeInformation[R]): DataStream[R] = {
     val mapper = new MapFunction[T, R] with ResultTypeQueryable[R] {
       def map(in: T): R                                = f(in)
       override def getProducedType: TypeInformation[R] = typeInfo
@@ -38,9 +38,9 @@ final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInf
     DataStream(stream.map(mapper, typeInfo))
   }
 
-  def flatMap[R](f: T => IterableOnce[R])(implicit typeInfo: TypeInformation[R]): DataStream[R] = {
+  def flatMap[R](f: T => IterableOnce[R])(using typeInfo: TypeInformation[R]): DataStream[R] = {
     val flatMapper = new FlatMapFunction[T, R] with ResultTypeQueryable[R] {
-      def flatMap(in: T, out: Collector[R])            = f(in).foreach(out.collect)
+      def flatMap(in: T, out: Collector[R]): Unit = f(in).iterator.foreach(out.collect)
       override def getProducedType: TypeInformation[R] = typeInfo
     }
     DataStream(stream.flatMap(flatMapper))
@@ -50,7 +50,7 @@ final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInf
       fun: RichAsyncFunction[T, R],
       timeout: Duration = 10.seconds,
       capacity: Int = 20
-  )(implicit typeInfo: TypeInformation[R]): DataStream[R] = {
+  )(using typeInfo: TypeInformation[R]): DataStream[R] = {
     val out = AsyncDataStream.orderedWait(
       stream,
       fun,
@@ -64,14 +64,14 @@ final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInf
       f: T => Future[R],
       timeout: Duration = 10.seconds,
       capacity: Int = 20
-  )(implicit typeInfo: TypeInformation[R]): DataStream[R] =
+  )(using typeInfo: TypeInformation[R]): DataStream[R] =
     orderedAsync(DataStream.asyncFunctionFromFuture(f), timeout, capacity)
 
   def unorderedAsync[R](
       fun: RichAsyncFunction[T, R],
       timeout: Duration = 10.seconds,
       capacity: Int = 20
-  )(implicit typeInfo: TypeInformation[R]): DataStream[R] = {
+  )(using typeInfo: TypeInformation[R]): DataStream[R] = {
     val out = AsyncDataStream.unorderedWait(
       stream,
       fun,
@@ -85,7 +85,7 @@ final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInf
       f: T => Future[R],
       timeout: Duration = 10.seconds,
       capacity: Int = 20
-  )(implicit typeInfo: TypeInformation[R]): DataStream[R] =
+  )(using typeInfo: TypeInformation[R]): DataStream[R] =
     unorderedAsync(DataStream.asyncFunctionFromFuture(f), timeout, capacity)
 
   def filter(f: T => Boolean): DataStream[T] = {
@@ -97,12 +97,12 @@ final case class DataStream[T](stream: JavaStream[T])(implicit typeInfo: TypeInf
 
   def filterNot(f: T => Boolean): DataStream[T] = filter(!f(_))
 
-  def collect[R](pf: PartialFunction[T, R])(implicit typeInfo: TypeInformation[R]): DataStream[R] =
-    filter(pf.isDefinedAt _).map(pf)
+  def collect[R](pf: PartialFunction[T, R])(using typeInfo: TypeInformation[R]): DataStream[R] =
+    filter(pf.isDefinedAt).map(pf)
 
-  def keyBy[K](f: T => K)(implicit keyTypeInfo: TypeInformation[K]): KeyedStream[T, K] = {
+  def keyBy[K](f: T => K)(using keyTypeInfo: TypeInformation[K]): KeyedStream[T, K] = {
     val keyExtractor = new KeySelector[T, K] with ResultTypeQueryable[K] {
-      def getKey(in: T)                                = f(in)
+      def getKey(in: T): K = f(in)
       override def getProducedType: TypeInformation[K] = keyTypeInfo
     }
     KeyedStream(new JavaKeyedStream(stream, keyExtractor, keyTypeInfo))
@@ -124,13 +124,13 @@ object DataStream {
   def apply[T: TypeInformation](stream: SingleOutputStreamOperator[T]): DataStream[T] =
     new DataStream[T](stream.asInstanceOf[JavaStream[T]])
 
-  def asyncFunctionFromFuture[T, R](f: T => Future[R])(implicit
+  def asyncFunctionFromFuture[T, R](f: T => Future[R])(using
       typeInfo: TypeInformation[R]
   ): RichAsyncFunction[T, R] =
     new RichAsyncFunction[T, R] with ResultTypeQueryable[R] {
       override def getProducedType: TypeInformation[R] = typeInfo
 
-      override def asyncInvoke(in: T, result: ResultFuture[R]) =
+      override def asyncInvoke(in: T, result: ResultFuture[R]): Unit =
         f(in).asJava.whenComplete { (response, error) =>
           Option(response) match {
             case Some(r) => result.complete(Collections.singletonList(r))

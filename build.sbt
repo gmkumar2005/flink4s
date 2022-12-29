@@ -1,5 +1,5 @@
-val scala213Version = "2.13.8"
-val scala3Version = "3.1.2"
+val scala213Version = "2.13.10"
+val scala3Version = "3.2.1"
 
 val supportedScalaVersions = List(scala3Version)
 
@@ -7,7 +7,7 @@ lazy val mavenSnapshots = "apache.snapshots" at "https://repository.apache.org/c
 
 resolvers ++= Seq(mavenSnapshots)
 
-val flinkVersion = "1.15.0"
+val flinkVersion = "1.15.1"
 
 val flinkLibs = Seq(
    "org.apache.flink" % "flink-streaming-java" % flinkVersion,
@@ -17,11 +17,11 @@ val flinkLibs = Seq(
 )
 
 val otherLibs = Seq(
-  "org.typelevel" %% "cats-core" % "2.7.0"
+  "org.typelevel" %% "cats-core" % "2.9.0"
 )
 
 val testingLibs = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.11" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.14" % Test,
 )
 
 lazy val root = project
@@ -29,7 +29,7 @@ lazy val root = project
   .settings(
     name := "flink4s",
     scalaVersion := scala3Version,
-    crossScalaVersions := Seq(scala3Version, scala213Version),
+//    crossScalaVersions := Seq(scala3Version, scala213Version),
     libraryDependencies ++= flinkLibs ++ otherLibs ++ testingLibs,
     publishingSettings
   )
@@ -39,7 +39,7 @@ import ReleaseTransformations._
 lazy val publishingSettings = Seq(
   organization := "com.ariskk",
   organizationName := "ariskk",
-  organizationHomepage := Some(url("http://ariskk.com/")),
+  organizationHomepage := Some(url("https://ariskk.com/")),
   scmInfo := Some(
     ScmInfo(
       url("https://github.com/ariskk/flink4s"),
@@ -51,11 +51,11 @@ lazy val publishingSettings = Seq(
       id    = "ariskk",
       name  = "Aris Koliopoulos",
       email = "aris@ariskk.com",
-      url   = url("http://ariskk.com")
+      url   = url("https://ariskk.com")
     )
   ),
   description := "Scala 3 wrapper for Apache Flink",
-  licenses := List("MIT" -> new URL("http://opensource.org/licenses/MIT")),
+  licenses := List("MIT" -> new URL("https://opensource.org/licenses/MIT")),
   homepage := Some(url("https://github.com/ariskk/flink4s")),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
