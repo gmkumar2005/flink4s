@@ -15,7 +15,7 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.api.common.JobExecutionResult
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
-import org.apache.flink.streaming.api.TimeCharacteristic
+
 
 final case class StreamExecutionEnvironment(javaEnv: JavaEnv) {
 
@@ -31,20 +31,14 @@ final case class StreamExecutionEnvironment(javaEnv: JavaEnv) {
     StreamExecutionEnvironment(javaEnv)
   }
 
-  def fromCollection[T](data: Seq[T])(implicit typeInfo: TypeInformation[T]): DataStream[T] =
+  def fromCollection[T](data: Seq[T])(using typeInfo: TypeInformation[T]): DataStream[T] =
     DataStream(javaEnv.fromCollection(data.asJava, typeInfo))
 
-  def addSource[T](function: SourceFunction[T])(implicit
+  def addSource[T](function: SourceFunction[T])(using
       typeInfo: TypeInformation[T]
   ): DataStream[T] =
     DataStream(javaEnv.addSource(function, typeInfo))
 
-  def setStreamTimeCharacteristic(
-      timeCharacteristic: TimeCharacteristic
-  ): StreamExecutionEnvironment = {
-    javaEnv.setStreamTimeCharacteristic(timeCharacteristic)
-    StreamExecutionEnvironment(javaEnv)
-  }
 
   def setRestartStrategy(
       restartStrategy: RestartStrategies.RestartStrategyConfiguration
