@@ -4,10 +4,10 @@ val scala3Version = "3.2.1"
 val supportedScalaVersions = List(scala3Version)
 
 lazy val mavenSnapshots = "apache.snapshots" at "https://repository.apache.org/content/groups/snapshots"
-
+ThisBuild/parallelExecution := false
 resolvers ++= Seq(mavenSnapshots)
 
-val flinkVersion = "1.15.1"
+val flinkVersion = "1.16.0"
 
 val flinkLibs = Seq(
    "org.apache.flink" % "flink-streaming-java" % flinkVersion,
@@ -17,11 +17,13 @@ val flinkLibs = Seq(
 )
 
 val otherLibs = Seq(
-  "org.typelevel" %% "cats-core" % "2.9.0"
+  "org.typelevel" %% "cats-core" % "2.9.0",
+    "com.lihaoyi" %% "pprint" % "0.8.1"
 )
 
 val testingLibs = Seq(
   "org.scalatest" %% "scalatest" % "3.2.14" % Test,
+  "ch.qos.logback"%"logback-classic"% "1.4.5" % Test
 )
 
 lazy val root = project

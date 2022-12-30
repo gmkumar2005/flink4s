@@ -1,18 +1,26 @@
 package com.ariskk.flink4s
 
+import com.ariskk.flink4s.ConnectedStreamsSpec.State
+import com.ariskk.flink4s.TypeInfo.stringTypeInfo
+import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 
-import TypeInfo.stringTypeInfo
-import ConnectedStreamsSpec.State
+final class ConnectedStreamsSpec extends AnyFunSpec with Matchers with BeforeAndAfterAll {
 
-final class ConnectedStreamsSpec extends AnyFunSpec with Matchers {
+  override def beforeAll(): Unit = {
+    FlinkExecutor.startCluster()
+  }
+
+  override def afterAll(): Unit = {
+    FlinkExecutor.stopCluster()
+  }
 
   describe("ConnectedStreams") {
 
     it("should biMap data statefully from two keyed streams") {
-      val env            = FlinkExecutor.newEnv(2)
+      val env            = FlinkExecutor.newEnv(FlinkExecutor.parallelismValue)
       val fooEvents      = (1 to 100).map(i => s"foo-${i % 10}")
       val barEvents      = (1 to 200).map(i => s"bar-${i % 10}")
       def key(s: String) = s.split("-").last
@@ -36,7 +44,7 @@ final class ConnectedStreamsSpec extends AnyFunSpec with Matchers {
           emptyState = State(0, 0)
         )
 
-      val results = stream.runAndCollect.groupBy(_._1).mapValues(_.last._2)
+      val results = stream.runAndCollect.groupBy(_._1).view.mapValues(_.last._2)
       results.values.toList.forall(_ == State(10, 20)) shouldBe true
 
     }
@@ -45,13 +53,14 @@ final class ConnectedStreamsSpec extends AnyFunSpec with Matchers {
 }
 
 object ConnectedStreamsSpec {
+  given stateTypeInfo: TypeInformation[State] = TypeInformation.of(classOf[State])
+
+  given keyedTypeInfo: TypeInformation[(String, State)] =
+    TypeInformation.of(classOf[(String, State)])
+
   final case class State(fooCount: Int, barCount: Int) {
     lazy val incrementFoo: State = State(fooCount + 1, barCount)
     lazy val incrementBar: State = State(fooCount, barCount + 1)
   }
-
-  given stateTypeInfo: TypeInformation[State] = TypeInformation.of(classOf[State])
-  given keyedTypeInfo: TypeInformation[(String, State)] =
-    TypeInformation.of(classOf[(String, State)])
 
 }

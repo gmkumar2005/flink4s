@@ -1,21 +1,17 @@
 package com.ariskk.flink4s
 
-import scala.jdk.CollectionConverters._
-import scala.concurrent.duration.Duration
-
-import org.apache.flink.runtime.state.StateBackend
-import org.apache.flink.streaming.api.environment.{
-  CheckpointConfig,
-  StreamExecutionEnvironment => JavaEnv
-}
-import org.apache.flink.configuration.Configuration
-import org.apache.flink.api.common.typeinfo.TypeInformation
-import org.apache.flink.streaming.api.graph.StreamGraph
-import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.api.common.JobExecutionResult
-import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
+import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.configuration.Configuration
+import org.apache.flink.runtime.state.StateBackend
+import org.apache.flink.streaming.api.CheckpointingMode
+import org.apache.flink.streaming.api.environment.{CheckpointConfig, StreamExecutionEnvironment as JavaEnv}
+import org.apache.flink.streaming.api.functions.source.SourceFunction
+import org.apache.flink.streaming.api.graph.StreamGraph
 
+import scala.concurrent.duration.Duration
+import scala.jdk.CollectionConverters.*
 
 final case class StreamExecutionEnvironment(javaEnv: JavaEnv) {
 
@@ -38,7 +34,6 @@ final case class StreamExecutionEnvironment(javaEnv: JavaEnv) {
       typeInfo: TypeInformation[T]
   ): DataStream[T] =
     DataStream(javaEnv.addSource(function, typeInfo))
-
 
   def setRestartStrategy(
       restartStrategy: RestartStrategies.RestartStrategyConfiguration
